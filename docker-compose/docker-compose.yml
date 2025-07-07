@@ -1,0 +1,66 @@
+services:
+  elasticsearch:
+    image: elasticsearch:9.0.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=123456
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    mem_limit: 3g
+    ports:
+      - "9200:9200"
+    volumes:
+      - esvolume:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
+  kibana:
+    image: kibana:9.0.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_SERVICEACCOUNTTOKEN=AAEAAWVsYXN0aWMva2liYW5hL2tpYmFuYS10b2tlbjpvSHFxaHd2bFFJR2JvcHdJRkRqYV9n
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - esnet
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.0.2
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5044:5044"     # nếu dùng filebeat
+      - "5000:5000"     # nếu dùng TCP input
+    environment:
+      - LS_JAVA_OPTS=-Xms1g -Xmx1g
+    mem_limit: 2g
+    depends_on:
+      - elasticsearch
+    networks:
+      - esnet
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.0.2
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /home/hieu/Downloads/springelk/logs:/logs  # mount thư mục log từ host vào container
+    depends_on:
+      - logstash
+    networks:
+      - esnet
+
+volumes:
+  esvolume:
+
+networks:
+  esnet:
+    driver: bridge

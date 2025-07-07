@@ -1,0 +1,10 @@
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - /logs/*.log       # <-- monitor all *.log file in parent folder and children folder
+    scan_frequency: 10s              # check change file every 10 seconds
+#    prospector.scanner.recursive_glob.enabled: true     # suppose folder recursive
+
+output.logstash:
+  hosts: ["logstash:5044"]

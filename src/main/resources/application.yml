@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: springelk
+logging:
+  file:
+    name: logs/spring.log
+  level:
+    root: DEBUG
+    org.springframework.web: DEBUG
